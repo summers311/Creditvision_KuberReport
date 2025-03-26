@@ -509,7 +509,7 @@ export default function CreditReport() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
                 type="search"
-                placeholder="Search by name..."
+                placeholder="Search by name or KuberID..."
                 className="pl-8 w-full border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-md"
                 value={searchTerm}
                 onChange={(e) => {
@@ -527,6 +527,7 @@ export default function CreditReport() {
                 <Table className="border-collapse w-full">
                   <TableHeader>
                     <TableRow className="bg-gray-50 border-b border-gray-200">
+                      <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KuberID</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vantage Score</TableHead>
@@ -541,6 +542,7 @@ export default function CreditReport() {
                         key={customer.id} 
                         className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                       >
+                        <TableCell className="py-3 px-4 text-sm font-medium text-blue-600">{customer.KuberID || '-'}</TableCell>
                         <TableCell className="py-3 px-4 text-sm font-medium text-gray-900">{`${customer.fname} ${customer.mname ? customer.mname + " " : ""}${customer.lname}`}</TableCell>
                         <TableCell className="py-3 px-4 text-sm text-gray-700">{customer.age}</TableCell>
                         <TableCell className="py-3 px-4 text-sm text-gray-700">

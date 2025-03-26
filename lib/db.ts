@@ -79,24 +79,25 @@ export async function getCustomers(page = 1, limit = 50, search = "") {
       id, fname, mname, lname, address, address2, CITY, ST, ZIP, 
       MAIL_DATE, MAIL_CLASS, EXP_DATE, INHOME_DATE, CLIENT, 
       csv_filename, age, vantage, utilization, debt, selection_grp, 
-      rev_debt, unsecured_debt, campaign_id
+      rev_debt, unsecured_debt, campaign_id,
+      CONCAT('CREDV-', id) as KuberID
     FROM KuberFinalMailFiles
   `
 
   const params = []
 
   if (search) {
-    query += ` WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ?`
-    params.push(`%${search}%`)
+    query += ` WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ? OR CONCAT('CREDV-', id) LIKE ?`
+    params.push(`%${search}%`, `%${search}%`)
   }
 
   // Get total count for pagination
   const countQuery = `SELECT COUNT(*) as total FROM KuberFinalMailFiles ${
-    search ? `WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ?` : ""
+    search ? `WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ? OR CONCAT('CREDV-', id) LIKE ?` : ""
   }`
 
   try {
-    const countResult = await executeQuery(countQuery, search ? [`%${search}%`] : []) as any[]
+    const countResult = await executeQuery(countQuery, search ? [`%${search}%`, `%${search}%`] : []) as any[]
     const total = countResult[0].total
 
     // Add pagination
