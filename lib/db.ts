@@ -80,20 +80,20 @@ export async function getCustomers(page = 1, limit = 50, search = "") {
       MAIL_DATE, MAIL_CLASS, EXP_DATE, INHOME_DATE, CLIENT, 
       csv_filename, age, vantage, utilization, debt, selection_grp, 
       rev_debt, unsecured_debt, campaign_id,
-      CONCAT('CREDV-', id) as REFCODE
+      REFCODE
     FROM KuberFinalMailFiles
   `
 
   const params = []
 
   if (search) {
-    query += ` WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ? OR CONCAT('CREDV-', id) LIKE ?`
+    query += ` WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ? OR REFCODE LIKE ?`
     params.push(`%${search}%`, `%${search}%`)
   }
 
   // Get total count for pagination
   const countQuery = `SELECT COUNT(*) as total FROM KuberFinalMailFiles ${
-    search ? `WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ? OR CONCAT('CREDV-', id) LIKE ?` : ""
+    search ? `WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ? OR REFCODE LIKE ?` : ""
   }`
 
   try {
