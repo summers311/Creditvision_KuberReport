@@ -28,7 +28,7 @@ export default function CreditReport() {
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
-    limit: 50,
+    limit: 20,
     totalPages: 0,
   })
   const [searchTerm, setSearchTerm] = useState("")
@@ -53,6 +53,12 @@ export default function CreditReport() {
   // State for campaign stats
   const [campaignStats, setCampaignStats] = useState([])
   const [campaignsLoading, setCampaignsLoading] = useState(true)
+  const [campaignPagination, setCampaignPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  })
 
   // State for address data
   const [addressData, setAddressData] = useState([])
@@ -118,14 +124,17 @@ export default function CreditReport() {
     async function fetchCampaignStats() {
       setCampaignsLoading(true)
       try {
-        const response = await fetch("/api/campaigns")
+        const response = await fetch(
+          `/api/campaigns?page=${campaignPagination.page}&limit=${campaignPagination.limit}`
+        )
 
         if (!response.ok) {
           throw new Error("Failed to fetch campaign stats")
         }
 
         const result = await response.json()
-        setCampaignStats(result)
+        setCampaignStats(result.data)
+        setCampaignPagination(result.pagination)
       } catch (error) {
         console.error("Error fetching campaign stats:", error)
       } finally {
@@ -134,7 +143,7 @@ export default function CreditReport() {
     }
 
     fetchCampaignStats()
-  }, [])
+  }, [campaignPagination.page, campaignPagination.limit])
 
   // Fetch address data
   useEffect(() => {
@@ -220,13 +229,17 @@ export default function CreditReport() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Total Debt</CardTitle>
+            <CardTitle>Average Debt</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
               $
               {dashboardStats.totalDebt ? (
-                Number(dashboardStats.totalDebt).toLocaleString(undefined, {
+                (Number(dashboardStats.totalDebt) / 
+                (Number(dashboardStats.age18_30) + 
+                 Number(dashboardStats.age31_45) + 
+                 Number(dashboardStats.age46_60) + 
+                 Number(dashboardStats.age60Plus))).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })
@@ -290,44 +303,97 @@ export default function CreditReport() {
         </CardHeader>
         <CardContent>
           {!campaignsLoading ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Campaign (CSV Filename)</TableHead>
-                    <TableHead>Records</TableHead>
-                    <TableHead>Total Debt</TableHead>
-                    <TableHead>Avg. Vantage</TableHead>
-                    <TableHead>Avg. Utilization</TableHead>
-                    <TableHead>Avg. Age</TableHead>
-                    <TableHead>Score 500-600</TableHead>
-                    <TableHead>Score 600-700</TableHead>
-                    <TableHead>Score 700+</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {campaignStats.map((campaign: any) => (
-                    <TableRow key={campaign.csv_filename}>
-                      <TableCell className="font-medium">{campaign.csv_filename}</TableCell>
-                      <TableCell>{campaign.count}</TableCell>
-                      <TableCell>
-                        $
-                        {Number(campaign.totalDebt).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </TableCell>
-                      <TableCell>{Math.round(campaign.avgVantage)}</TableCell>
-                      <TableCell>{Math.round(campaign.avgUtilization)}%</TableCell>
-                      <TableCell>{Math.round(campaign.avgAge)}</TableCell>
-                      <TableCell>{campaign.range500_600}</TableCell>
-                      <TableCell>{campaign.range600_700}</TableCell>
-                      <TableCell>{campaign.range700Plus}</TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Campaign (CSV Filename)</TableHead>
+                      <TableHead>Records</TableHead>
+                      <TableHead>Total Debt</TableHead>
+                      <TableHead>Avg. Vantage</TableHead>
+                      <TableHead>Avg. Utilization</TableHead>
+                      <TableHead>Avg. Age</TableHead>
+                      <TableHead>Score 500-600</TableHead>
+                      <TableHead>Score 600-700</TableHead>
+                      <TableHead>Score 700+</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {campaignStats.map((campaign: any) => (
+                      <TableRow key={campaign.csv_filename}>
+                        <TableCell className="font-medium">{campaign.csv_filename}</TableCell>
+                        <TableCell>{campaign.count}</TableCell>
+                        <TableCell>
+                          $
+                          {Number(campaign.totalDebt).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </TableCell>
+                        <TableCell>{Math.round(campaign.avgVantage)}</TableCell>
+                        <TableCell>{Math.round(campaign.avgUtilization)}%</TableCell>
+                        <TableCell>{Math.round(campaign.avgAge)}</TableCell>
+                        <TableCell>{campaign.range500_600}</TableCell>
+                        <TableCell>{campaign.range600_700}</TableCell>
+                        <TableCell>{campaign.range700Plus}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {campaignPagination.totalPages > 1 && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      {campaignPagination.page > 1 && (
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCampaignPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+                          />
+                        </PaginationItem>
+                      )}
+
+                      {Array.from({ length: Math.min(5, campaignPagination.totalPages) }, (_, i) => {
+                        // Show pages around current page
+                        let pageNum
+                        if (campaignPagination.totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (campaignPagination.page <= 3) {
+                          pageNum = i + 1
+                        } else if (campaignPagination.page >= campaignPagination.totalPages - 2) {
+                          pageNum = campaignPagination.totalPages - 4 + i
+                        } else {
+                          pageNum = campaignPagination.page - 2 + i
+                        }
+
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              isActive={pageNum === campaignPagination.page}
+                              onClick={() => setCampaignPagination((prev) => ({ ...prev, page: pageNum }))}
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      })}
+
+                      {campaignPagination.page < campaignPagination.totalPages && (
+                        <PaginationItem>
+                          <PaginationNext onClick={() => setCampaignPagination((prev) => ({ ...prev, page: prev.page + 1 }))} />
+                        </PaginationItem>
+                      )}
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+
+              <div className="text-sm text-muted-foreground mt-2 text-center">
+                Showing {campaignStats.length} of {campaignPagination.total} campaigns
+              </div>
+            </>
           ) : (
             <div className="space-y-2">
               <Skeleton className="h-10 w-full" />

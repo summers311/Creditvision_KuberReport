@@ -120,8 +120,23 @@ export async function getCustomers(page = 1, limit = 50, search = "") {
   }
 }
 
-export async function getCampaignStats() {
+export async function getCampaignStats(page = 1, limit = 20) {
   console.log("getCampaignStats called")
+  
+  // Get total count of unique campaigns
+  const countQuery = `
+    SELECT COUNT(DISTINCT csv_filename) as total 
+    FROM KuberFinalMailFiles
+  `
+  
+  const countResult = await executeQuery(countQuery, []) as any[]
+  const total = countResult[0].total
+  
+  // Calculate pagination
+  const offset = (page - 1) * limit
+  const totalPages = Math.ceil(total / limit)
+  
+  // Get paginated campaign stats
   const query = `
     SELECT 
       csv_filename,
@@ -135,9 +150,20 @@ export async function getCampaignStats() {
       SUM(CASE WHEN vantage >= 700 THEN 1 ELSE 0 END) as range700Plus
     FROM KuberFinalMailFiles
     GROUP BY csv_filename
+    LIMIT ? OFFSET ?
   `
 
-  return await executeQuery(query, [])
+  const campaigns = await executeQuery(query, [limit, offset]) as any[]
+  
+  return {
+    data: campaigns,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages,
+    },
+  }
 }
 
 export async function getDashboardStats() {
