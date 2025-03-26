@@ -167,11 +167,23 @@ export default function CreditReport() {
     { name: "60+", value: dashboardStats.age60Plus },
   ]
 
+  // Add console.log to debug dashboard stats
+  console.log("Dashboard Stats:", dashboardStats);
+  console.log("Vantage Score Data Values:", {
+    "500-600": dashboardStats.vantage500_600,
+    "600-700": dashboardStats.vantage600_700,
+    "700+": dashboardStats.vantage700Plus
+  });
+
+  // Use the actual values from the database
   const vantageScoreData = [
-    { name: "500-600", value: dashboardStats.vantage500_600 },
-    { name: "600-700", value: dashboardStats.vantage600_700 },
-    { name: "700+", value: dashboardStats.vantage700Plus },
+    { name: "500-600", value: Number(dashboardStats.vantage500_600) || 0 },
+    { name: "600-700", value: Number(dashboardStats.vantage600_700) || 0 },
+    { name: "700+", value: Number(dashboardStats.vantage700Plus) || 0 },
   ]
+  
+  // Add console.log to debug vantage score data
+  console.log("Vantage Score Data:", vantageScoreData);
 
   return (
     <div className="container mx-auto p-4">
@@ -444,4 +456,3 @@ export default function CreditReport() {
     </div>
   )
 }
-

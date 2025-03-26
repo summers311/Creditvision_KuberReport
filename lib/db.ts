@@ -142,6 +142,20 @@ export async function getCampaignStats() {
 
 export async function getDashboardStats() {
   console.log("getDashboardStats called")
+  
+  // First, let's check if there are any records with vantage scores
+  const checkQuery = `
+    SELECT 
+      COUNT(*) as total,
+      MIN(vantage) as minVantage,
+      MAX(vantage) as maxVantage
+    FROM KuberFinalMailFiles
+  `
+  
+  const checkResult = await executeQuery(checkQuery, []) as any[]
+  console.log("Vantage Score Check:", checkResult[0])
+  
+  // Now let's get the dashboard stats with explicit counts for each vantage range
   const query = `
     SELECT 
       AVG(age) as avgAge,
@@ -154,11 +168,19 @@ export async function getDashboardStats() {
       SUM(CASE WHEN age > 60 THEN 1 ELSE 0 END) as age60Plus,
       SUM(CASE WHEN vantage < 600 THEN 1 ELSE 0 END) as vantage500_600,
       SUM(CASE WHEN vantage >= 600 AND vantage < 700 THEN 1 ELSE 0 END) as vantage600_700,
-      SUM(CASE WHEN vantage >= 700 THEN 1 ELSE 0 END) as vantage700Plus
+      SUM(CASE WHEN vantage >= 700 THEN 1 ELSE 0 END) as vantage700Plus,
+      COUNT(CASE WHEN vantage < 600 THEN 1 END) as count500_600,
+      COUNT(CASE WHEN vantage >= 600 AND vantage < 700 THEN 1 END) as count600_700,
+      COUNT(CASE WHEN vantage >= 700 THEN 1 END) as count700Plus
     FROM KuberFinalMailFiles
   `
 
   const result = await executeQuery(query, []) as any[]
+  console.log("Dashboard Stats Result:", result[0])
+  
+  // Log the result for debugging
+  console.log("Dashboard Stats Result:", result[0])
+  
   return result[0]
 }
 
