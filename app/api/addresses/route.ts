@@ -2,69 +2,171 @@ import { NextResponse } from "next/server"
 import { getAddressData } from "@/lib/db"
 import { handleApiError } from "../error-handler"
 
-// Function to generate approximate coordinates from ZIP code
-// This uses a deterministic algorithm to spread points across the US based on ZIP code
-function getCoordinatesFromZip(zip: string): { lat: number; lng: number } {
+// Cache for ZIP code coordinates to avoid repeated API calls
+const zipCoordinateCache: Record<string, { lat: number; lng: number }> = {}
+
+// Function to get coordinates from the Zippopotam.us API
+async function getCoordinatesFromAPI(zip: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    // Check cache first
+    if (zipCoordinateCache[zip]) {
+      return zipCoordinateCache[zip]
+    }
+    
+    // Make API request
+    const response = await fetch(`https://api.zippopotam.us/us/${zip}`)
+    
+    if (!response.ok) {
+      console.error(`Failed to get coordinates for ZIP ${zip}: ${response.statusText}`)
+      return null
+    }
+    
+    const data = await response.json()
+    
+    if (data && data.places && data.places.length > 0) {
+      const place = data.places[0]
+      const coordinates = {
+        lat: parseFloat(place.latitude),
+        lng: parseFloat(place.longitude)
+      }
+      
+      // Cache the result
+      zipCoordinateCache[zip] = coordinates
+      
+      return coordinates
+    }
+    
+    return null
+  } catch (error) {
+    console.error(`Error fetching coordinates for ZIP ${zip}:`, error)
+    return null
+  }
+}
+
+// Fallback function to generate approximate coordinates when API fails
+function getFallbackCoordinates(zip: string): { lat: number; lng: number } {
   // Extract the first 3 digits of the ZIP code (the "prefix")
   const zipPrefix = parseInt(zip.substring(0, 3), 10)
   
-  // Map ZIP code prefixes to approximate regions in the US
-  // ZIP code prefixes are roughly geographical:
-  // 0xx-2xx: Northeast and Mid-Atlantic
-  // 3xx-4xx: Southeast
-  // 5xx-6xx: Midwest and South Central
-  // 7xx-8xx: Central and Mountain
-  // 9xx: West Coast and Pacific
-  
+  // Map ZIP code prefixes to regions in the US
   let baseLat = 39.8283 // Center of US latitude
   let baseLng = -98.5795 // Center of US longitude
   
-  if (zipPrefix < 100) {
-    // Northeast (New England)
-    baseLat = 42.5 + (zipPrefix % 10) * 0.2
-    baseLng = -71.5 + (zipPrefix % 10) * 0.3
-  } else if (zipPrefix < 200) {
-    // Mid-Atlantic
-    baseLat = 40.0 + (zipPrefix % 100) * 0.05
-    baseLng = -75.0 + (zipPrefix % 100) * 0.05
-  } else if (zipPrefix < 300) {
-    // Mid-Atlantic and parts of Southeast
-    baseLat = 38.0 + (zipPrefix % 100) * 0.04
-    baseLng = -78.0 + (zipPrefix % 100) * 0.04
-  } else if (zipPrefix < 400) {
-    // Southeast
-    baseLat = 33.0 + (zipPrefix % 100) * 0.05
-    baseLng = -82.0 + (zipPrefix % 100) * 0.05
-  } else if (zipPrefix < 500) {
-    // Southeast and parts of South Central
-    baseLat = 32.0 + (zipPrefix % 100) * 0.05
-    baseLng = -86.0 + (zipPrefix % 100) * 0.05
-  } else if (zipPrefix < 600) {
-    // Midwest
-    baseLat = 41.0 + (zipPrefix % 100) * 0.04
-    baseLng = -88.0 + (zipPrefix % 100) * 0.06
-  } else if (zipPrefix < 700) {
-    // South Central
-    baseLat = 35.0 + (zipPrefix % 100) * 0.05
-    baseLng = -92.0 + (zipPrefix % 100) * 0.05
-  } else if (zipPrefix < 800) {
-    // Central Plains
-    baseLat = 38.0 + (zipPrefix % 100) * 0.05
-    baseLng = -97.0 + (zipPrefix % 100) * 0.05
-  } else if (zipPrefix < 900) {
-    // Mountain West
-    baseLat = 40.0 + (zipPrefix % 100) * 0.05
-    baseLng = -110.0 + (zipPrefix % 100) * 0.08
-  } else {
-    // West Coast
-    baseLat = 37.0 + (zipPrefix % 100) * 0.08
-    baseLng = -122.0 + (zipPrefix % 100) * 0.05
+  // Northeast (New England)
+  if (zipPrefix >= 0 && zipPrefix <= 6) {
+    baseLat = 42.5
+    baseLng = -71.5
+  } 
+  // Massachusetts, Rhode Island
+  else if (zipPrefix >= 10 && zipPrefix <= 29) {
+    baseLat = 42.0
+    baseLng = -71.5
+  }
+  // New York City and surrounding areas
+  else if (zipPrefix >= 100 && zipPrefix <= 119) {
+    baseLat = 40.7
+    baseLng = -74.0
+  }
+  // Upstate New York
+  else if (zipPrefix >= 120 && zipPrefix <= 149) {
+    baseLat = 42.5
+    baseLng = -76.0
+  }
+  // Pennsylvania
+  else if (zipPrefix >= 150 && zipPrefix <= 196) {
+    baseLat = 40.5
+    baseLng = -77.5
+  }
+  // Delaware, Maryland, DC, Virginia
+  else if (zipPrefix >= 197 && zipPrefix <= 249) {
+    baseLat = 38.5
+    baseLng = -77.0
+  }
+  // North Carolina, South Carolina
+  else if (zipPrefix >= 270 && zipPrefix <= 299) {
+    baseLat = 35.0
+    baseLng = -80.0
+  }
+  // Georgia
+  else if (zipPrefix >= 300 && zipPrefix <= 319) {
+    baseLat = 33.0
+    baseLng = -83.5
+  }
+  // Florida
+  else if (zipPrefix >= 320 && zipPrefix <= 349) {
+    baseLat = 28.0
+    baseLng = -82.0
+  }
+  // Alabama, Tennessee
+  else if (zipPrefix >= 350 && zipPrefix <= 379) {
+    baseLat = 34.0
+    baseLng = -86.5
+  }
+  // Michigan
+  else if (zipPrefix >= 480 && zipPrefix <= 499) {
+    baseLat = 43.0
+    baseLng = -84.5
+  }
+  // Ohio
+  else if (zipPrefix >= 430 && zipPrefix <= 458) {
+    baseLat = 40.0
+    baseLng = -82.5
+  }
+  // Kentucky, Indiana
+  else if (zipPrefix >= 400 && zipPrefix <= 429) {
+    baseLat = 38.0
+    baseLng = -85.5
+  }
+  // Wisconsin, Illinois
+  else if (zipPrefix >= 500 && zipPrefix <= 599) {
+    baseLat = 42.0
+    baseLng = -89.0
+  }
+  // Missouri, Iowa, Minnesota
+  else if (zipPrefix >= 600 && zipPrefix <= 658) {
+    baseLat = 41.0
+    baseLng = -93.0
+  }
+  // Kansas, Nebraska
+  else if (zipPrefix >= 660 && zipPrefix <= 699) {
+    baseLat = 39.0
+    baseLng = -97.0
+  }
+  // Louisiana, Arkansas, Oklahoma
+  else if (zipPrefix >= 700 && zipPrefix <= 749) {
+    baseLat = 33.0
+    baseLng = -93.0
+  }
+  // Texas
+  else if (zipPrefix >= 750 && zipPrefix <= 799) {
+    baseLat = 31.0
+    baseLng = -98.0
+  }
+  // North Dakota, South Dakota, Montana, Wyoming
+  else if (zipPrefix >= 570 && zipPrefix <= 599) {
+    baseLat = 45.0
+    baseLng = -103.0
+  }
+  // Colorado, New Mexico
+  else if (zipPrefix >= 800 && zipPrefix <= 899) {
+    baseLat = 37.0
+    baseLng = -106.0
+  }
+  // California
+  else if (zipPrefix >= 900 && zipPrefix <= 961) {
+    baseLat = 34.0
+    baseLng = -118.0
+  }
+  // Washington, Oregon, Idaho, Nevada, Utah, Arizona
+  else if (zipPrefix >= 970 && zipPrefix <= 999) {
+    baseLat = 43.0
+    baseLng = -116.0
   }
   
   // Add some variation based on the last 2 digits of the ZIP
   const lastDigits = parseInt(zip.substring(3, 5), 10)
-  const latVariation = (lastDigits % 10) * 0.02
-  const lngVariation = (lastDigits % 10) * 0.03
+  const latVariation = (lastDigits % 10) * 0.01
+  const lngVariation = (lastDigits % 10) * 0.015
   
   return {
     lat: baseLat + latVariation,
@@ -72,7 +174,7 @@ function getCoordinatesFromZip(zip: string): { lat: number; lng: number } {
   }
 }
 
-// Some known ZIP codes for major cities to make the map more accurate
+// Known ZIP codes for major cities as a fallback
 const knownZipCodes: Record<string, { lat: number; lng: number }> = {
   // New York area
   "100": { lat: 40.7128, lng: -74.0060 }, // Manhattan
@@ -110,16 +212,68 @@ const knownZipCodes: Record<string, { lat: number; lng: number }> = {
 export async function GET() {
   try {
     const addresses = await getAddressData()
-
-    // Add coordinates based on ZIP code
-    const addressesWithCoords = (addresses as any[]).map((addr) => {
+    const addressesWithCoords = [] as any[]
+    
+    // Process addresses in batches to avoid overwhelming the API
+    const batchSize = 10
+    const uniqueZips = new Set<string>()
+    
+    // First, collect all unique ZIP codes
+    for (const addr of addresses as any[]) {
       const zip5 = addr.ZIP?.substring(0, 5) || "00000"
-      const zip3 = zip5.substring(0, 3)
+      if (zip5 !== "00000") {
+        uniqueZips.add(zip5)
+      }
+    }
+    
+    console.log(`Found ${uniqueZips.size} unique ZIP codes`)
+    
+    // Process unique ZIP codes in batches
+    const uniqueZipArray = Array.from(uniqueZips)
+    const zipCoordinates: Record<string, { lat: number; lng: number }> = {}
+    
+    for (let i = 0; i < uniqueZipArray.length; i += batchSize) {
+      const batch = uniqueZipArray.slice(i, i + batchSize)
+      const batchPromises = batch.map(async (zip) => {
+        // Try to get coordinates from API
+        const apiCoords = await getCoordinatesFromAPI(zip)
+        
+        if (apiCoords) {
+          zipCoordinates[zip] = apiCoords
+        } else {
+          // Fall back to known ZIP codes or approximation
+          const zip3 = zip.substring(0, 3)
+          zipCoordinates[zip] = (zip3 in knownZipCodes) 
+            ? knownZipCodes[zip3] 
+            : getFallbackCoordinates(zip)
+        }
+      })
       
-      // Use known city coordinates if available, otherwise calculate based on ZIP
-      const coords = (zip3 in knownZipCodes) ? knownZipCodes[zip3] : getCoordinatesFromZip(zip5)
-
-      return {
+      // Wait for all ZIP codes in this batch to be processed
+      await Promise.all(batchPromises)
+      
+      // Add a small delay between batches to avoid rate limiting
+      if (i + batchSize < uniqueZipArray.length) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    }
+    
+    // Now map all addresses using the collected coordinates
+    for (const addr of addresses as any[]) {
+      const zip5 = addr.ZIP?.substring(0, 5) || "00000"
+      let coords
+      
+      if (zip5 in zipCoordinates) {
+        coords = zipCoordinates[zip5]
+      } else {
+        // Fallback for any ZIP codes that weren't processed
+        const zip3 = zip5.substring(0, 3)
+        coords = (zip3 in knownZipCodes) 
+          ? knownZipCodes[zip3] 
+          : getFallbackCoordinates(zip5)
+      }
+      
+      addressesWithCoords.push({
         id: addr.id,
         address: addr.address,
         city: addr.CITY,
@@ -127,8 +281,8 @@ export async function GET() {
         zip: addr.ZIP,
         lat: coords.lat,
         lng: coords.lng,
-      }
-    })
+      })
+    }
 
     return NextResponse.json(addressesWithCoords)
   } catch (error) {
