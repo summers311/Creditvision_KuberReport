@@ -195,10 +195,16 @@ export default function CreditReport() {
   console.log("Vantage Score Data:", vantageScoreData);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Creditvision KuberReport</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 shadow-md">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl font-bold">Creditvision KuberReport</h1>
+          <p className="text-blue-100 mt-1">Kuber mailer Dashboard</p>
+        </div>
+      </header>
+      
+      <main className="container mx-auto p-6 flex-grow">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Average Age</CardTitle>
@@ -519,6 +525,20 @@ export default function CreditReport() {
           )}
         </CardContent>
       </Card>
+      </main>
+      
+      <footer className="bg-gray-100 border-t border-gray-200 py-4 mt-auto">
+        <div className="container mx-auto px-4 text-center">
+          <a 
+            href="https://www.d1al.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+          >
+            Powered by d1al
+          </a>
+        </div>
+      </footer>
     </div>
   )
 }
