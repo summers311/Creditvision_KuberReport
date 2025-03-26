@@ -80,7 +80,7 @@ export async function getCustomers(page = 1, limit = 50, search = "") {
       MAIL_DATE, MAIL_CLASS, EXP_DATE, INHOME_DATE, CLIENT, 
       csv_filename, age, vantage, utilization, debt, selection_grp, 
       rev_debt, unsecured_debt, campaign_id,
-      CONCAT('CREDV-', id) as KuberID
+      CONCAT('CREDV-', id) as REFCODE
     FROM KuberFinalMailFiles
   `
 
@@ -100,8 +100,8 @@ export async function getCustomers(page = 1, limit = 50, search = "") {
     const countResult = await executeQuery(countQuery, search ? [`%${search}%`, `%${search}%`] : []) as any[]
     const total = countResult[0].total
 
-    // Add pagination
-    query += ` LIMIT ? OFFSET ?`
+    // Add ordering by MAIL_DATE (soonest first) and pagination
+    query += ` ORDER BY MAIL_DATE DESC LIMIT ? OFFSET ?`
     params.push(limit, offset)
 
     const rows = await executeQuery(query, params)
@@ -137,7 +137,7 @@ export async function getCampaignStats(page = 1, limit = 20) {
   const offset = (page - 1) * limit
   const totalPages = Math.ceil(total / limit)
   
-  // Get paginated campaign stats
+  // Get paginated campaign stats with MAIL_DATE (using MIN to get the first one)
   const query = `
     SELECT 
       csv_filename,
@@ -148,9 +148,11 @@ export async function getCampaignStats(page = 1, limit = 20) {
       SUM(debt) as totalDebt,
       SUM(CASE WHEN vantage < 600 THEN 1 ELSE 0 END) as range500_600,
       SUM(CASE WHEN vantage >= 600 AND vantage < 700 THEN 1 ELSE 0 END) as range600_700,
-      SUM(CASE WHEN vantage >= 700 THEN 1 ELSE 0 END) as range700Plus
+      SUM(CASE WHEN vantage >= 700 THEN 1 ELSE 0 END) as range700Plus,
+      MIN(MAIL_DATE) as mail_date
     FROM KuberFinalMailFiles
     GROUP BY csv_filename
+    ORDER BY mail_date DESC
     LIMIT ? OFFSET ?
   `
 

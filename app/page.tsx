@@ -209,7 +209,7 @@ export default function CreditReport() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Creditvision KuberReport</h1>
-              <p className="text-blue-100 mt-1 font-medium">Comprehensive Credit Analysis Dashboard</p>
+              <p className="text-blue-100 mt-1 font-medium">Comprehensive Kuber Dashboard</p>
             </div>
           </div>
         </div>
@@ -395,6 +395,7 @@ export default function CreditReport() {
                   <TableHeader>
                     <TableRow className="bg-gray-50 border-b border-gray-200">
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign (CSV Filename)</TableHead>
+                      <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mail Date</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Records</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Debt</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Vantage</TableHead>
@@ -412,6 +413,7 @@ export default function CreditReport() {
                         className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                       >
                         <TableCell className="py-3 px-4 text-sm font-medium text-gray-900">{campaign.csv_filename}</TableCell>
+                        <TableCell className="py-3 px-4 text-sm text-gray-700">{campaign.mail_date || '-'}</TableCell>
                         <TableCell className="py-3 px-4 text-sm text-gray-700">{campaign.count.toLocaleString()}</TableCell>
                         <TableCell className="py-3 px-4 text-sm text-gray-700">
                           <span className="font-medium text-green-700">$
@@ -509,7 +511,7 @@ export default function CreditReport() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
                 type="search"
-                placeholder="Search by name or KuberID..."
+                placeholder="Search by name or REFCODE..."
                 className="pl-8 w-full border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-md"
                 value={searchTerm}
                 onChange={(e) => {
@@ -527,9 +529,10 @@ export default function CreditReport() {
                 <Table className="border-collapse w-full">
                   <TableHeader>
                     <TableRow className="bg-gray-50 border-b border-gray-200">
-                      <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KuberID</TableHead>
+                      <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">REFCODE</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</TableHead>
+                      <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mail Date</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vantage Score</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilization</TableHead>
                       <TableHead className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debt</TableHead>
@@ -542,9 +545,10 @@ export default function CreditReport() {
                         key={customer.id} 
                         className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                       >
-                        <TableCell className="py-3 px-4 text-sm font-medium text-blue-600">{customer.KuberID || '-'}</TableCell>
+                        <TableCell className="py-3 px-4 text-sm font-medium text-blue-600">{customer.REFCODE || '-'}</TableCell>
                         <TableCell className="py-3 px-4 text-sm font-medium text-gray-900">{`${customer.fname} ${customer.mname ? customer.mname + " " : ""}${customer.lname}`}</TableCell>
                         <TableCell className="py-3 px-4 text-sm text-gray-700">{customer.age}</TableCell>
+                        <TableCell className="py-3 px-4 text-sm text-gray-700">{customer.MAIL_DATE || '-'}</TableCell>
                         <TableCell className="py-3 px-4 text-sm text-gray-700">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                             customer.vantage >= 700 ? 'bg-green-100 text-green-800' : 
