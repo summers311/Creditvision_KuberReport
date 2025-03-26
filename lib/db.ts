@@ -1,18 +1,8 @@
 import mysql from "mysql2/promise"
+import { dbConfig } from "../config/db-config"
 
-// Database connection configuration
-// Using 127.0.0.1 instead of localhost to force IPv4
-const dbConfig = {
-  host: "127.0.0.1", // Changed from 'localhost' to '127.0.0.1' to force IPv4
-  user: "root",
-  password: "Cr3ditV1aon!!!",
-  database: "CreditVision",
-  // Adding additional connection options to handle potential issues
-  connectTimeout: 10000, // 10 seconds
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-}
+// Database connection configuration is imported from config/db-config.ts
+// Edit that file to switch between local and server environments
 
 // Create a connection pool
 const pool = mysql.createPool(dbConfig)
@@ -139,4 +129,3 @@ export async function getAddressData() {
 
   return await executeQuery(query)
 }
-
