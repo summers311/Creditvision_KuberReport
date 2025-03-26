@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Creditvision KuberReport',
+  description: 'Credit reporting dashboard for Creditvision KuberReport',
   generator: 'v0.dev',
 }
 
