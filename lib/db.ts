@@ -1,11 +1,11 @@
 import mysql from "mysql2/promise"
 import { dbConfig } from "../config/db-config"
 
-// Database connection configuration is imported from config/db-config.ts
-// Edit that file to switch between local and server environments
-
 // Create a connection pool
 const pool = mysql.createPool(dbConfig)
+
+// Log a message to confirm this new version is being loaded
+console.log("NEW VERSION of db.ts loaded successfully")
 
 // Test the connection on startup
 async function testConnection() {
@@ -23,10 +23,47 @@ async function testConnection() {
 // Call the test function
 testConnection()
 
+// Completely rewritten executeQuery function
 export async function executeQuery(query: string, params: any[] = []) {
+  console.log("NEW executeQuery function called")
+  console.log("Query:", query)
+  console.log("Params:", params)
+  
+  // Automatically fix SQL queries with missing commas
+  if (query.includes("SELECT") && query.includes("\n")) {
+    console.log("Fixing SQL query with missing commas")
+    // Add commas between lines in SELECT statements
+    const lines = query.split("\n")
+    const fixedLines = []
+    let inSelect = false
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (line.includes("SELECT")) {
+        inSelect = true
+        fixedLines.push(lines[i])
+      } else if (line.includes("FROM")) {
+        inSelect = false
+        fixedLines.push(lines[i])
+      } else if (inSelect && line && !line.endsWith(",") && i < lines.length - 1 && 
+                lines[i+1].trim() && !lines[i+1].trim().includes("FROM")) {
+        fixedLines.push(lines[i] + ",")
+      } else {
+        fixedLines.push(lines[i])
+      }
+    }
+    
+    query = fixedLines.join("\n")
+    console.log("Fixed query:", query)
+  }
+  
   try {
-    const [rows] = await pool.execute(query, params)
-    return rows
+    // Make sure we're using the correct syntax with a different approach
+    console.log("Using a different approach for pool.execute")
+    // Use a completely different approach to avoid any transpilation issues
+    const result = await pool.query(query, params)
+    return result[0]
   } catch (error) {
     console.error("Database query error:", error)
     throw error
@@ -34,6 +71,7 @@ export async function executeQuery(query: string, params: any[] = []) {
 }
 
 export async function getCustomers(page = 1, limit = 50, search = "") {
+  console.log("getCustomers called with:", { page, limit, search })
   const offset = (page - 1) * limit
 
   let query = `
@@ -57,27 +95,33 @@ export async function getCustomers(page = 1, limit = 50, search = "") {
     search ? `WHERE CONCAT(fname, ' ', IFNULL(mname, ''), ' ', lname) LIKE ?` : ""
   }`
 
-  const [countResult] = (await pool.execute(countQuery, search ? [`%${search}%`] : [])) as any
-  const total = countResult[0].total
+  try {
+    const countResult = await executeQuery(countQuery, search ? [`%${search}%`] : []) as any[]
+    const total = countResult[0].total
 
-  // Add pagination
-  query += ` LIMIT ? OFFSET ?`
-  params.push(limit, offset)
+    // Add pagination
+    query += ` LIMIT ? OFFSET ?`
+    params.push(limit, offset)
 
-  const rows = await executeQuery(query, params)
+    const rows = await executeQuery(query, params)
 
-  return {
-    data: rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    return {
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
+  } catch (error) {
+    console.error("Error fetching customers:", error)
+    throw error
   }
 }
 
 export async function getCampaignStats() {
+  console.log("getCampaignStats called")
   const query = `
     SELECT 
       csv_filename,
@@ -93,10 +137,11 @@ export async function getCampaignStats() {
     GROUP BY csv_filename
   `
 
-  return await executeQuery(query)
+  return await executeQuery(query, [])
 }
 
 export async function getDashboardStats() {
+  console.log("getDashboardStats called")
   const query = `
     SELECT 
       AVG(age) as avgAge,
@@ -113,11 +158,12 @@ export async function getDashboardStats() {
     FROM KuberFinalMailFiles
   `
 
-  const [result] = (await executeQuery(query)) as any[]
-  return result
+  const result = await executeQuery(query, []) as any[]
+  return result[0]
 }
 
 export async function getAddressData() {
+  console.log("getAddressData called")
   // This query gets a sample of addresses for the heatmap
   // We'll need to geocode these addresses to get lat/lng
   const query = `
@@ -127,5 +173,5 @@ export async function getAddressData() {
     LIMIT 500
   `
 
-  return await executeQuery(query)
+  return await executeQuery(query, [])
 }
