@@ -228,9 +228,9 @@ export default function CreditReport() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <p className="text-3xl font-bold text-gray-800">
+                <div className="text-3xl font-bold text-gray-800">
                   {Math.round(dashboardStats.avgAge) || <Skeleton className="h-8 w-16" />}
-                </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -246,9 +246,9 @@ export default function CreditReport() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <p className="text-3xl font-bold text-gray-800">
+                <div className="text-3xl font-bold text-gray-800">
                   {Math.round(dashboardStats.avgVantage) || <Skeleton className="h-8 w-16" />}
-                </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -264,7 +264,7 @@ export default function CreditReport() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                   </svg>
                 </div>
-                <p className="text-3xl font-bold text-gray-800">{Math.round(dashboardStats.avgUtilization)}%</p>
+                <div className="text-3xl font-bold text-gray-800">{Math.round(dashboardStats.avgUtilization)}%</div>
               </div>
             </CardContent>
           </Card>
@@ -280,7 +280,7 @@ export default function CreditReport() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <p className="text-3xl font-bold text-gray-800">
+                <div className="text-3xl font-bold text-gray-800">
                   $
                   {dashboardStats.totalDebt ? (
                     (Number(dashboardStats.totalDebt) / 
@@ -294,7 +294,7 @@ export default function CreditReport() {
                   ) : (
                     <Skeleton className="h-8 w-24" />
                   )}
-                </p>
+                </div>
               </div>
             </CardContent>
           </Card>
