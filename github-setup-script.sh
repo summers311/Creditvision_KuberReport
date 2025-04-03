@@ -46,8 +46,8 @@ echo "Building the application..."
 npm run build
 
 # Start the application with PM2
-echo "Starting the application on port 7777 with PM2..."
-PORT=7777 pm2 start npm --name "$APP_NAME" -- run start
+echo "Starting the application on port 80 with PM2..."
+PORT=80 pm2 start npm --name "$APP_NAME" -- run start
 
 # Save the PM2 process list to be restored after reboot
 echo "Saving PM2 process configuration..."

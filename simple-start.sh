@@ -15,8 +15,8 @@ fi
 echo "Building the application..."
 npm run build
 
-# Start the application on port 7777
-echo "Starting the application on port 7777..."
-PORT=7777 npm run start
+# Start the application on port 80
+echo "Starting the application on port 80..."
+PORT=80 npm run start
 
-echo "Application should now be running at http://localhost:7777"
+echo "Application should now be running at http://localhost:80"

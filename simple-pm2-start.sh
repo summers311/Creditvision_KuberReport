@@ -31,7 +31,7 @@ module.exports = {
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
       env: {
-        PORT: 7777,
+        PORT: 80,
         NODE_ENV: 'production'
       }
     }
@@ -43,7 +43,7 @@ EOL
 echo "Starting the application with PM2..."
 pm2 start ecosystem.config.js
 
-echo "Application should now be running at http://localhost:7777"
+echo "Application should now be running at http://localhost:80"
 echo "To check status: pm2 status"
 echo "To view logs: pm2 logs credit-report-dashboard"
 echo "To stop: pm2 stop credit-report-dashboard"
